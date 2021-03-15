@@ -1,25 +1,45 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
+  title: "Reproducible Research: Peer Assessment 1"
 output: 
   html_document:
-    keep_md: true
+  keep_md: true
 ---
-
-
-## Loading and preprocessing the data
-
-
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
+  
+  
+  ## Loading and preprocessing the data
+measurements <- read.csv("activity.csv")
+  
+  
+  ## What is mean total number of steps taken per day?
+stepsPerDay <- aggregate(steps ~ date, measurements, sum)
+hist(stepsPerDay$steps, main = "Steps per day", xlab = "Steps", col = "green", breaks = 8)
+meanStepsPerDay <- mean(stepsPerDay$steps)
+medianStepsPerDay <- median(stepsPerDay$steps) 
+  ## What is the average daily activity pattern?
+stepsInterval <- aggregate(steps ~ interval, measurements, mean)
+plot(stepsInterval$interval, stepsInterval$steps, type="l", xlab = "5 min - interval", ylab = "Average steps", main = "Average Daily Activity Pattern", col = "green")
+stepsInterval$interval[which.max(stepsInterval$steps)]
 
 ## Imputing missing values
-
-
-
+nrow(measurements[is.na(measurements$steps),])
+measurementsWithoutNAs <- measurements
+measurementsWithoutNAs[is.na(measurementsWithoutNAs$steps), "steps"] <- 0
+stepsPerDayNoNAs <- aggregate(steps ~ date, measurementsWithoutNAs, sum)
+hist(stepsPerDayNoNAs$steps, main = "Steps per day", xlab = "Steps", col = "blue", breaks = 8)
+meanStepsPerDayNoNAs <- mean(stepsPerDayNoNAs$steps)
+medianStepsPerDayNoNAs <- median(stepsPerDayNoNAs$steps)
 ## Are there differences in activity patterns between weekdays and weekends?
+measurementsWithoutNAs$day <- as.POSIXlt(measurementsWithoutNAs$date)$wday
+measurementsWithoutNAs$dayType <- as.factor(ifelse(measurementsWithoutNAs$day == 0 | measurementsWithoutNAs$day == 6, "weekend", "weekday"))
+measurementsWithoutNAs <- subset(measurementsWithoutNAs, select = -c(day))
+
+head(measurementsWithoutNAs)
+weekdaysData <- measurementsWithoutNAs[measurementsWithoutNAs$dayType == "weekday",]
+weekendsData <- measurementsWithoutNAs[measurementsWithoutNAs$dayType == "weekend",]
+stepsIntervalWeekdays <- aggregate(steps ~ interval, weekdaysData, mean)
+stepsIntervalWeekends <- aggregate(steps ~ interval, weekendsData, mean)
+
+par(mfrow = c(2, 1))
+
+plot(stepsIntervalWeekdays, type = "l", col = "green", main = "Weekdays")
+plot(stepsIntervalWeekends, type = "l", col = "red", main = "Weekends")
